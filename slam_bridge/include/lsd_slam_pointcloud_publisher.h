@@ -3,8 +3,7 @@
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-#include "slam_bridge/keyframeMsg.h"
-#include <image_acquisition/request_camera_parameters.h>
+#include <slam_bridge/keyframeMsg.h>
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud_conversion.h>
@@ -26,7 +25,7 @@
 #include <geometry_msgs/Point32.h>
 #include <sstream>
 #include <fstream>
-#include "robot_control/request_endpointstate.h"
+#include <autopic_msgs/RequestCameraState.h>
 #include "geometry_msgs/PoseStamped.h"
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
@@ -35,7 +34,9 @@
 #include <dynamic_reconfigure/Reconfigure.h>
 #include <dynamic_reconfigure/Config.h>
 
-class SlamBridge{
+
+class SlamBridge
+{
 
 private:    
 
@@ -60,19 +61,6 @@ private:
 
     Sophus::Sim3f               camToWorld;
 
-    double f;
-    double k1;
-    double k2;
-    double k3;
-    double P1;
-    double P2;
-    double Sx;
-    double Sy;
-    double Cx;
-    double Cy;
-    double Iw;
-    double Ih;
-
     double fxi;
     double fyi;
     double cxi;
@@ -87,7 +75,7 @@ public:
     void pointcloudCallback(const slam_bridge::keyframeMsg::ConstPtr& raw_point_cloud_message);
     void poseCallback(const geometry_msgs::PoseStamped::ConstPtr& slam_pose);
     bool requestEndPointState();
-    bool requestCameraParameters();
+    bool readCameraParameters();
 };
 
 #endif /* LSD_SLAM_POINTCLOUD_PUBLISHER_H_ */

@@ -62,9 +62,9 @@ include_directories(
 
 ## Generate messages in the 'msg' folder
 add_message_files(
-   FILES
-   keyframeMsg.msg
-   keyframeGraphMsg.msg
+  FILES
+  keyframeMsg.msg
+  keyframeGraphMsg.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -83,7 +83,10 @@ add_message_files(
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
-   DEPENDENCIES
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
+  sensor_msgs
 )
 
 ###################################
@@ -96,9 +99,9 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include
 #  LIBRARIES slam
-#  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs
+  CATKIN_DEPENDS message_runtime geometry_msgs roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -108,13 +111,10 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
+include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
-
-
-include_directories(include)
 
 
 ## Declare a cpp library
@@ -133,14 +133,19 @@ add_definitions(${PCL_DEFINITIONS})
 ## Declare a cpp executable
 add_executable(lsd_slam_pointcloud_publisher src/lsd_slam_pointcloud_publisher.cpp)
 
+## Add cmake target dependencies of the executable/library
+## as an example, message headers may need to be generated before nodes
+add_dependencies(lsd_slam_pointcloud_publisher lsd_slam_pointcloud_publisher_generate_messages_cpp)
+add_dependencies(lsd_slam_pointcloud_publisher
+  ${catkin_EXPORTED_TARGETS}
+)
+
 ## Specify libraries to link a library or executable target against
 target_link_libraries(lsd_slam_pointcloud_publisher
    ${catkin_LIBRARIES}
 )
 
 target_link_libraries (lsd_slam_pointcloud_publisher ${PCL_LIBRARIES})
-
-
 
 
 
@@ -158,19 +163,19 @@ target_link_libraries (lsd_slam_pointcloud_publisher ${PCL_LIBRARIES})
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
 
-## Mark executables and/or libraries for installation
-# install(TARGETS slam slam_node
+## Mark executables and/or libararies for installation
+install(TARGETS lsd_slam_pointcloud_publisher
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
+install(DIRECTORY include/${PROJECT_NAME}/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+   FILES_MATCHING PATTERN "*.h"
+   PATTERN ".svn" EXCLUDE
+)
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
