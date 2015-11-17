@@ -1,4 +1,0 @@
-# Request for the state machine to pause the system (stop the arm and so on)
-bool pause
----
-bool succeded

@@ -1,3 +1,0 @@
-string request_message
----
-sensor_msgs/Image image
