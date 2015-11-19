@@ -167,7 +167,7 @@ void SlamBridge::pointcloudCallback(const slam_bridge::keyframeMsg::ConstPtr &ra
 
   // We need to transform the processed pointcloud to the base frame.
   // For this we use the known end-point pose when the source image was taken used for
-  // the lsd-slam node to calculate this recieved pointcloud.
+  // the lsd-slam node to calculate this received pointcloud.
   // If the pointcloud was transformed using the lsd-slam pose, then output it directly.
   if (!lsd_slam_frame_transformed)
   {
@@ -175,7 +175,7 @@ void SlamBridge::pointcloudCallback(const slam_bridge::keyframeMsg::ConstPtr &ra
     // to the world frame (base). Note that the time is important here when looking up the
     // transform. The time should be when the image was taken of the keyframe the received pointcloud
     // belongs to.
-    processed_pointcloud.header.frame_id = "servo_camera";
+    processed_pointcloud.header.frame_id = "camera";
     sensor_msgs::PointCloud transformed_pointcloud;
     try
     {
@@ -183,21 +183,21 @@ void SlamBridge::pointcloudCallback(const slam_bridge::keyframeMsg::ConstPtr &ra
       ROS_INFO("%f", processed_pointcloud.header.stamp.toSec());
 
       // Wait (max 3 sec) until transform comes available in the system. There are always slight delays.
-      transform_listener.waitForTransform("base", processed_pointcloud.header.frame_id,
+      transform_listener.waitForTransform("delta_base", processed_pointcloud.header.frame_id,
                                           processed_pointcloud.header.stamp, ros::Duration(3.0));
-      transform_listener.transformPointCloud("base", ros::Time::now(), processed_pointcloud,
+      transform_listener.transformPointCloud("delta_base", ros::Time(0), processed_pointcloud,
                                              processed_pointcloud.header.frame_id, transformed_pointcloud);
 
     }
     catch (tf::TransformException ex) {
-      ROS_WARN("Could not transform recieved slam pointcloud from '%s' to 'base' frame : %s",
+      ROS_WARN("Could not transform recieved slam pointcloud from '%s' to 'delta_base' frame : %s",
                processed_pointcloud.header.frame_id.c_str(), ex.what());
     }
 
     // Transform pointcloud to pointcloud2 message.
     sensor_msgs::PointCloud2 transformed_pointcloud2;
     sensor_msgs::convertPointCloudToPointCloud2(transformed_pointcloud, transformed_pointcloud2);
-    transformed_pointcloud2.header.frame_id = "/slam_pointcloud_rotated";
+    transformed_pointcloud2.header.frame_id = "camera";
     output_pointcloud_publisher.publish(transformed_pointcloud2);
   }
   else
@@ -261,7 +261,7 @@ void SlamBridge::pointcloudCallback(const slam_bridge::keyframeMsg::ConstPtr &ra
       */
 
       // Publish latest reconstructed scene in appropiate frame.
-      processed_pointcloud2.header.frame_id = "/slam_pointcloud_rotated";
+      processed_pointcloud2.header.frame_id = "camera";
       processed_pointcloud2.header.stamp.sec = raw_point_cloud_message->time;
       output_pointcloud_publisher.publish(processed_pointcloud2);
     }
@@ -307,9 +307,6 @@ SlamBridge::SlamBridge() {
   sparsity_factor = 1;
   node_handle.getParam("sparsity_factor", sparsity_factor);
 
-  // Check if camera parameters are already available. If not, no pointcloud can be transformed.
-  camera_parameters_loaded = false;
-
   // Bool that either tells the bridge to use a pose transformation
   // based lsd-slam pose (true) or baxter's published pose (false).
   lsd_slam_frame_transformed = true;
@@ -317,7 +314,7 @@ SlamBridge::SlamBridge() {
   // Frame that the reconstructed pointcloud is published in.
   node_handle.getParam("frame", frame);
 
-  robot_endpointstate_client = node_handle.serviceClient<autopic_msgs::RequestCameraState>("/request_camera_state");
+  robot_endpointstate_client = node_handle.serviceClient<autopic_msgs::RequestCameraState>("camerastate");
 
   raw_pointcloud_subcriber = node_handle.subscribe("/lsd_slam/keyframes", 1000, &SlamBridge::pointcloudCallback, this);
   slam_pose_subcriber = node_handle.subscribe("/lsd_slam/pose", 1000, &SlamBridge::poseCallback, this);
@@ -402,7 +399,7 @@ int main(int argc, char **argv) {
   while (slam_bridge.node_handle.ok())
   {
     // Frame transformations need to be updated constantly, otherwise they will fade out of existence.
-    tf_broadcaster.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "base", "slam_pointcloud"));
+    tf_broadcaster.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "delta_base", "slam_pointcloud"));
 
     // Do one spin of the rosnode, e.g. checking and executing callbacks.
     // (http://wiki.ros.org/roscpp/Overview/Callbacks%20and%20Spinning)
